@@ -1,12 +1,15 @@
+#include <VirtualWire.h>
+
 #define RELAY_PIN 2
-#define LIGHT_PIN A0
 #define BUTTON_PIN 3
+#define RECIVER_PIN 5
 
 boolean relayState = false;
 boolean sysState = true;
+boolean recoveryState;
 
-unsigned int lightValue;
-unsigned int valueOfSwitch = 520;
+byte message[VW_MAX_MESSAGE_LEN];
+byte messageLen = VW_MAX_MESSAGE_LEN;
 
 void setup(){
   Serial.begin(9600);
@@ -14,6 +17,11 @@ void setup(){
   pinMode(RELAY_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   digitalWrite(RELAY_PIN, relayState);
+
+  vw_set_rx_pin(RECIVER_PIN);
+  vw_set_ptt_inverted(true);
+  vw_setup(2000);
+  vw_rx_start();
 }
 
 boolean changeStatus(boolean state){
@@ -21,37 +29,57 @@ boolean changeStatus(boolean state){
   else return true;
 }
 
+boolean compare(char* text) {
+  for(int i = 0; i<messageLen; i++)
+  {
+    if(message[i] != text[i]) return false;
+  }
+ 
+  return true;
+}
+
 void loop(){
   
   if(digitalRead(BUTTON_PIN) == LOW){
     sysState = changeStatus(sysState);
+    if(!sysState){
+      recoveryState = relayState;
+    }
+    else{
+      relayState = recoveryState;
+      digitalWrite(RELAY_PIN, relayState);
+    }
     delay(700);
   }
   
   if(sysState){
-    //controllo per switch
-    lightValue = analogRead(LIGHT_PIN);
-  
-    if(lightValue > valueOfSwitch && !relayState){
+    if(vw_get_message(message, &messageLen)){
+      //sistema acceso e ricezione 433Mhz
+      if(compare("on") && !relayState){
+      
+        relayState = true;
+        digitalWrite(RELAY_PIN, relayState);
+        delay(1000);
+      
+      }
     
-      relayState = true;
-      digitalWrite(RELAY_PIN, relayState);
-      delay(1000);
-    
-    }
-  
-    else if(lightValue < valueOfSwitch && relayState){
-    
-      relayState = false;
-      digitalWrite(RELAY_PIN, relayState);
-      delay(1000);
-    
+      else if(compare("off") && relayState){
+      
+        relayState = false;
+        digitalWrite(RELAY_PIN, relayState);
+        delay(1000);
+      
+      }
     }
   }
+  
   else{
     //Il sistema è spento
+    if(vw_get_message(message, &messageLen)){
+      if(compare("on")) recoveryState = true;
+      else if(compare("off")) recoveryState = false;
+    }
     relayState = false;
-    digitalWrite(RELAY_PIN, relayState);
-    
+    digitalWrite(RELAY_PIN, relayState);  
   }
 }
