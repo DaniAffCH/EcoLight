@@ -10,6 +10,10 @@ boolean relayState = false;
 void setup()
 {
     Serial.begin(9600);
+
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
+    
     vw_set_tx_pin(TRANSMITTER_PIN);
     vw_setup(2000);
 }

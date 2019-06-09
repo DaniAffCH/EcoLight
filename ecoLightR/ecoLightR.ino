@@ -18,6 +18,9 @@ void setup(){
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   digitalWrite(RELAY_PIN, relayState);
 
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
+
   vw_set_rx_pin(RECIVER_PIN);
   vw_set_ptt_inverted(true);
   vw_setup(2000);
