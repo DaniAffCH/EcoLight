@@ -4,8 +4,8 @@
 #define LIGHT_PIN A0
 
 unsigned int lightValue;
-unsigned int valueOfSwitch = 520;
 boolean relayState = false;
+boolean switch_;
 
 void setup()
 {
@@ -23,17 +23,28 @@ void sendSignal(const char *msg){
   vw_wait_tx();
 }
 
+bool reciveFromPython(){
+  char msg = Serial.read();
+  if(msg == 't') return true;
+  if(msg == 'f') return false;
+}
+
 void loop()
 {
   lightValue = analogRead(LIGHT_PIN);
-  if(lightValue > valueOfSwitch && !relayState){
+  //Invio a python il valore tramite seriale
+  Serial.println("ard"+String(lightValue));
+  
+  switch_ = reciveFromPython();
+  
+  if(switch_ && !relayState){
    
     sendSignal("on");
     relayState = true;
     
   }
   
-  else if(lightValue < valueOfSwitch && relayState){
+  else if(!switch_ && relayState){
     
     sendSignal("off");
     relayState = false;
