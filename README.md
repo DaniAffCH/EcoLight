@@ -4,4 +4,4 @@
 
 EcoLight è un progetto open-source che utilizza arduino per controllare lo stato di una lampada in relazione alla luminosità dell'ambiente grazie ad un semplice modello di machine learning (classificatore).
 
-Il valore della luce è compreso tra 0 e 1023
+Il valore del fotoresistore è compreso tra 0 e 1023
